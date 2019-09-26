@@ -6,85 +6,85 @@
 package identity
 
 import (
-  "os"
+	b64 "encoding/base64"
 	"encoding/json"
 	"io/ioutil"
-	b64 "encoding/base64"
+	"os"
 
 	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/peer"
 )
 
 type PeerIdentityJson struct {
-  Name string
-  Id string
-  PrivKey string
-  PubKey string
+	Name    string
+	Id      string
+	PrivKey string
+	PubKey  string
 }
 
 // Create json file with identity information
 func CreateIdentityJson(privKey crypto.PrivKey) string {
-  ID, err := peer.IDFromPrivateKey(privKey)
-  if err != nil {
-    panic(err)
-  }
-  _ = ID
+	ID, err := peer.IDFromPrivateKey(privKey)
+	if err != nil {
+		panic(err)
+	}
+	_ = ID
 
-  pvtBytes, err := privKey.Raw()
-  if err != nil {
-    panic(err)
-  }
-  _ = pvtBytes
-  pubBytes, err := privKey.GetPublic().Raw()
-  if err != nil {
-    panic(err)
-  }
-  _ = pubBytes
+	pvtBytes, err := privKey.Raw()
+	if err != nil {
+		panic(err)
+	}
+	_ = pvtBytes
+	pubBytes, err := privKey.GetPublic().Raw()
+	if err != nil {
+		panic(err)
+	}
+	_ = pubBytes
 
-  identityJson := &PeerIdentityJson {
-    Name: "PeerVault device identity",
-    Id: ID.Pretty(),
-    PrivKey: b64.StdEncoding.EncodeToString(pvtBytes),
-    PubKey: b64.StdEncoding.EncodeToString(pubBytes),
-  }
+	identityJson := &PeerIdentityJson{
+		Name:    "PeerVault device identity",
+		Id:      ID.Pretty(),
+		PrivKey: b64.StdEncoding.EncodeToString(pvtBytes),
+		PubKey:  b64.StdEncoding.EncodeToString(pubBytes),
+	}
 
 	idJson, err := json.MarshalIndent(identityJson, "", " ")
 	if err != nil {
-    panic(err)
-  }
+		panic(err)
+	}
 
-  return string(idJson)
+	return string(idJson)
 }
 
 func ReadIdentityJson(filePath string) (crypto.PrivKey, crypto.PubKey, error) {
-  // Open our jsonFile
-  jsonFile, err := os.Open(filePath)
-  // if we os.Open returns an error then handle it
-  if err != nil {
-    return nil, nil, err
-  }
-  // defer the closing of our jsonFile so that we can parse it later on
-  defer jsonFile.Close()
+	// Open our jsonFile
+	jsonFile, err := os.Open(filePath)
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		return nil, nil, err
+	}
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
 
-  // read our opened xmlFile as a byte array.
-  byteValue, _ := ioutil.ReadAll(jsonFile)
+	// read our opened xmlFile as a byte array.
+	byteValue, _ := ioutil.ReadAll(jsonFile)
 
-  // we initialize our Users array
-  var peerIdentity PeerIdentityJson
+	// we initialize our Users array
+	var peerIdentity PeerIdentityJson
 
-  // we unmarshal our byteArray which contains our
-  // jsonFile's content into 'users' which we defined above
-  json.Unmarshal(byteValue, &peerIdentity)
+	// we unmarshal our byteArray which contains our
+	// jsonFile's content into 'users' which we defined above
+	json.Unmarshal(byteValue, &peerIdentity)
 
-  privKeyByte, err := b64.StdEncoding.DecodeString(peerIdentity.PrivKey)
-  if err != nil {
-    return nil, nil, err
-  }
+	privKeyByte, err := b64.StdEncoding.DecodeString(peerIdentity.PrivKey)
+	if err != nil {
+		return nil, nil, err
+	}
 
-  pvtKey, err := crypto.UnmarshalSecp256k1PrivateKey(privKeyByte)
-  if err != nil {
-    return nil, nil, err
-  }
+	pvtKey, err := crypto.UnmarshalSecp256k1PrivateKey(privKeyByte)
+	if err != nil {
+		return nil, nil, err
+	}
 
-  return pvtKey, pvtKey.GetPublic(), nil
+	return pvtKey, pvtKey.GetPublic(), nil
 }
