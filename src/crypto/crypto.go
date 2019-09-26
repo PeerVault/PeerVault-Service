@@ -11,6 +11,7 @@ package crypto
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"log"
 
@@ -43,7 +44,7 @@ func (s *Seed) CreateMnemonic() {
 
 // Create a bip39 seed
 // Create s.mnemonic if is not specified
-func (s Seed) CreateSeed() {
+func (s *Seed) CreateSeed() {
 	if s.Mnemonic == "" {
 		s.CreateMnemonic()
 	}
@@ -55,7 +56,10 @@ func (s Seed) CreateSeed() {
 //
 
 // Create master private key from seed
-func (s Seed) CreateMasterKey() (*bip32.Key, error) {
+func (s *Seed) CreateMasterKey() (*bip32.Key, error) {
+	if len(s.seed) == 0 {
+		return nil, errors.New("You must create seed before master key")
+	}
 	return bip32.NewMasterKey(s.seed)
 }
 
