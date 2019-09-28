@@ -8,12 +8,12 @@
 package peer
 
 import (
-	"fmt"
 	"github.com/Power-LAB/PeerVault/crypto"
+	"log"
 )
 
 func Listen() {
 	seed := &crypto.Seed{}
 	seed.CreateMnemonic()
-	fmt.Println("listen from peer", seed.Mnemonic)
+	log.Printf("listen from peer %s", seed.Mnemonic)
 }

@@ -7,44 +7,41 @@
 package control
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
-	"github.com/gorilla/websocket"
+	"github.com/Power-LAB/PeerVault/event"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
-var upgrader = websocket.Upgrader{} // use default options
+const (
+	timeout = 10 * time.Second
+)
 
-func echo(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
+// Retrieved owner information
+func getOwner(w http.ResponseWriter, r *http.Request) {
+	err := event.Write(event.Message{
+		Type: "owner",
+		Data: nil,
+	})
 	if err != nil {
-		log.Print("upgrade:", err)
-		return
+		panic(err)
 	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
-	}
+	fmt.Fprintf(w, "Hello, %q", r.URL.Path)
 }
 
-func Listen() {
+func Listen(address* string) {
 	fmt.Println("listen from control")
-	flag.Parse()
-	log.SetFlags(0)
-	http.HandleFunc("/echo", echo)
-	log.Fatal(http.ListenAndServe(*addr, nil))
 
+	http.HandleFunc("/owner", getOwner)
+
+	s := &http.Server{
+		Addr:           *address,
+		Handler:        nil,
+		ReadTimeout:    timeout,
+		WriteTimeout:   timeout,
+		MaxHeaderBytes: 1 << 20,
+	}
+	log.Fatal(s.ListenAndServe())
 }
