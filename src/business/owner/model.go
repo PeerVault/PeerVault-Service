@@ -1,0 +1,4 @@
+package owner
+
+func fetchOwner() {
+}

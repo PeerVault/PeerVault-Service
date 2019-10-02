@@ -12,29 +12,20 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Power-LAB/PeerVault/event"
+	"github.com/Power-LAB/PeerVault/business/owner"
 )
 
 const (
 	timeout = 10 * time.Second
 )
 
-// Retrieved owner information
-func getOwner(w http.ResponseWriter, r *http.Request) {
-	err := event.Write(event.Message{
-		Type: "owner",
-		Data: nil,
-	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Fprintf(w, "Hello, %q", r.URL.Path)
-}
-
 func Listen(address* string) {
 	fmt.Println("listen from control")
 
-	http.HandleFunc("/owner", getOwner)
+	// GET / POST owner information
+	http.HandleFunc("/owner", owner.Controller)
+	// POST owner SEED information
+	http.HandleFunc("/owner/seed", owner.ControllerSeed)
 
 	s := &http.Server{
 		Addr:           *address,

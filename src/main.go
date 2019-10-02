@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"github.com/Power-LAB/PeerVault/control"
-	"github.com/Power-LAB/PeerVault/event"
-	"github.com/Power-LAB/PeerVault/peer"
+	"github.com/Power-LAB/PeerVault/communication/control"
+	"github.com/Power-LAB/PeerVault/communication/event"
+	"github.com/Power-LAB/PeerVault/communication/peer"
 )
 
 func main() {
