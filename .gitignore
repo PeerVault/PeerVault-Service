@@ -26,3 +26,5 @@
 
 .idea
 bin
+peervault.db
+.DS_Store

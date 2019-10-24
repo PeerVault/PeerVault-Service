@@ -289,3 +289,9 @@ func restoreOwner(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
+
+// Generate a code to confirm deletion of owner and therefore any information of the current device
+func requestDeleteOwner(w http.ResponseWriter, r *http.Request) {
+	// TODO must notify other peer of the deletion of device
+	http.Error(w, "Delete not yet implemented", http.StatusServiceUnavailable)
+}
