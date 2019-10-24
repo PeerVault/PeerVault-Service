@@ -9,6 +9,6 @@ require (
 	github.com/libp2p/go-libp2p-core v0.2.2
 	github.com/tyler-smith/go-bip32 v0.0.0-20170922074101-2c9cfd177564
 	github.com/tyler-smith/go-bip39 v1.0.2
-	go.etcd.io/bbolt v1.3.3 // indirect
+	go.etcd.io/bbolt v1.3.3
 	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392
 )

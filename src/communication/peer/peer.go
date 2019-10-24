@@ -7,13 +7,7 @@
 // same of different owner
 package peer
 
-import (
-	"github.com/Power-LAB/PeerVault/crypto"
-	"log"
-)
-
 func Listen() {
-	seed := &crypto.Seed{}
-	seed.CreateMnemonic()
-	log.Printf("listen from peer %s", seed.Mnemonic)
+	// Loop until owner exist
+	//log.Printf("listen from peer %s", seed.Mnemonic)
 }

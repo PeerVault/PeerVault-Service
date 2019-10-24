@@ -22,8 +22,7 @@ type PeerIdentityJson struct {
 	PubKey  string
 }
 
-// Create json file with identity information
-func CreateIdentityJson(privKey crypto.PrivKey) string {
+func CreateIdentity(name string, privKey crypto.PrivKey) PeerIdentityJson {
 	ID, err := peer.IDFromPrivateKey(privKey)
 	if err != nil {
 		panic(err)
@@ -41,13 +40,17 @@ func CreateIdentityJson(privKey crypto.PrivKey) string {
 	}
 	_ = pubBytes
 
-	identityJson := &PeerIdentityJson{
-		Name:    "PeerVault device identity",
-		Id:      ID.Pretty(),
+	return PeerIdentityJson{
+		Name: name,
+		Id: ID.Pretty(),
 		PrivKey: b64.StdEncoding.EncodeToString(pvtBytes),
-		PubKey:  b64.StdEncoding.EncodeToString(pubBytes),
+		PubKey: b64.StdEncoding.EncodeToString(pubBytes),
 	}
+}
 
+// Create json file with identity information
+func CreateIdentityJson(privKey crypto.PrivKey) string {
+	identityJson := CreateIdentity("PeerVault device identity", privKey)
 	idJson, err := json.MarshalIndent(identityJson, "", " ")
 	if err != nil {
 		panic(err)
