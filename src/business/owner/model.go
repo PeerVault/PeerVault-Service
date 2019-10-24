@@ -47,6 +47,10 @@ func IsOwnerExist() (bool, error) {
 	return exist, err
 }
 
+func (o *Owner) GetIdentity() identity.PeerIdentityJson {
+	return o.identity
+}
+
 func (o *Owner) FetchOwner() error {
 	db, err := database.Open()
 	if err != nil {

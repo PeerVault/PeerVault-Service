@@ -7,8 +7,6 @@ import (
 	"github.com/Power-LAB/PeerVault/identity"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/Power-LAB/PeerVault/communication/event"
 )
 
 // Manage Owner GET / POST
@@ -49,16 +47,6 @@ func getOwner(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusFailedDependency)
 		_, _ = w.Write([]byte("{\"error\": \"Owner not existing, you must create one first\"}"))
-		return
-	}
-
-	err = event.Write(event.Message{
-		Type: "owner",
-		Data: nil,
-	})
-	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
-		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
 

@@ -48,6 +48,18 @@ func CreateIdentity(name string, privKey crypto.PrivKey) PeerIdentityJson {
 	}
 }
 
+func (p PeerIdentityJson) GetCryptoPrivateKey() (crypto.PrivKey, error) {
+	privKeyByte, err := b64.StdEncoding.DecodeString(p.PrivKey)
+	if err != nil {
+		return nil, err
+	}
+	pvtKey, err := crypto.UnmarshalSecp256k1PrivateKey(privKeyByte)
+	if err != nil {
+		return nil, err
+	}
+	return pvtKey, nil
+}
+
 // Create json file with identity information
 func CreateIdentityJson(privKey crypto.PrivKey) string {
 	identityJson := CreateIdentity("PeerVault device identity", privKey)
