@@ -6,12 +6,13 @@ import (
 	"github.com/Power-LAB/PeerVault/database"
 	"github.com/Power-LAB/PeerVault/identity"
 	"go.etcd.io/bbolt"
+	"net/http"
 )
 
 const (
-	OwnerPasswordSecurityNone = iota // Password never required
-	OwnerPasswordSecurityAlways = iota // Password always ask
-	OwnerPasswordSecurityWhenExpose = iota // Password required when expose secret
+	PasswordPolicyNone             = iota // Password never required
+	PasswordPolicyAlwaysRequired   = iota // Password always ask
+	PasswordPolicyOnlyWhenExposure = iota // Password required when expose secret
 )
 
 type Owner struct {
@@ -20,8 +21,8 @@ type Owner struct {
 	// Public
 	Nickname string
 	DeviceName string
-	Code string
-	AskPassword int // OwnerPasswordSecurityNone | OwnerPasswordSecurityAlways | OwnerPasswordSecurityWhenExpose
+	Code string 		//`json:"-"`    WE CANT USE IT, BECAUSE WE ALSO CONVERT IN JSON ON BBOLT
+	AskPassword int // PasswordPolicyNone | PasswordPolicyAlwaysRequired | PasswordPolicyOnlyWhenExposure
 }
 
 func IsOwnerExist() (bool, error) {
@@ -139,4 +140,32 @@ func (o *Owner) SaveIdentity() error {
 		}
 		return b.Put([]byte("identity"), buf)
 	})
+}
+
+// Verification of the password of the owner
+// We also check that the owner exist, if not, we return FALSE as we assume is not authorized by definition
+func PasswordVerification(r *http.Request, exposure bool) bool {
+	exist, err := IsOwnerExist()
+	if err != nil || exist == false {
+		return false
+	}
+	o := &Owner{}
+	err = o.FetchOwner()
+	if err != nil {
+		return false
+	}
+
+	// Always authorized when password is disabled
+	if o.AskPassword == PasswordPolicyNone {
+		fmt.Println("PasswordVerification PasswordPolicyNone")
+		return true
+	}
+
+	// Authorized when we are not expose secret and password policy is exposure only
+	if !exposure && o.AskPassword == PasswordPolicyOnlyWhenExposure {
+		fmt.Println("PasswordVerification PasswordPolicyOnlyWhenExposure")
+		return true
+	}
+
+	return o.Code == r.Header.Get("X-OWNER-CODE")
 }

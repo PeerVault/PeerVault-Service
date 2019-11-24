@@ -12,16 +12,20 @@ import (
 // Manage Owner GET / POST
 func Controller(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodGet:
-		getOwner(w, r)
-	case http.MethodPatch:
-		updateOwner(w, r)
-	case http.MethodPost:
-		createOwner(w, r)
-	case http.MethodDelete:
-		requestDeleteOwner(w, r)
-	default:
-		http.Error(w, "Invalid request method.", 405)
+		case http.MethodGet:
+			getOwner(w, r)
+		case http.MethodPatch:
+			if !PasswordVerification(r, false) {
+				http.Error(w, "{\"error\": \"X-OWNER-CODE is required\"}", http.StatusUnauthorized)
+				return
+			}
+			updateOwner(w, r)
+		case http.MethodPost:
+			createOwner(w, r)
+		case http.MethodDelete:
+			requestDeleteOwner(w, r)
+		default:
+			http.Error(w, "Invalid request method.", 405)
 	}
 }
 
@@ -57,6 +61,7 @@ func getOwner(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
+	o.Code = ""
 
 	buf, err := json.Marshal(o)
 	if err != nil {
@@ -149,21 +154,8 @@ func createOwner(w http.ResponseWriter, r *http.Request) {
 
 // Change owner information
 func updateOwner(w http.ResponseWriter, r *http.Request) {
-	exist, err := IsOwnerExist()
-	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
-		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
-		return
-	}
-	if exist == false {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusFailedDependency)
-		_, _ = w.Write([]byte("{\"error\": \"Owner not existing, you must create one first\"}"))
-		return
-	}
-
 	o := &Owner{}
-	err = o.FetchOwner()
+	err := o.FetchOwner()
 	if err != nil {
 		fmt.Printf("INTERNAL ERROR: %s", err.Error())
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)

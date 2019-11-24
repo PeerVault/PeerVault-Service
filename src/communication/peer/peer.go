@@ -4,17 +4,15 @@
 //
 // Peer package will manage all the communication with
 // the EXTERNAL Peers (libp2p) to exchange password with other Peer
-// same of different owner
+// same or different owner
 package peer
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 
 	"github.com/Power-LAB/PeerVault/business/owner"
-	"github.com/Power-LAB/PeerVault/communication/event"
 	"github.com/libp2p/go-libp2p"
-	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	ma "github.com/multiformats/go-multiaddr"
 )
@@ -45,8 +43,7 @@ func Listen(relayHost string) {
 		panic(err)
 	}
 
-	// Zero out the listen addresses for the host, so it can only communicate
-	// via p2p-circuit for our example
+	// Zero out the listen addresses for the host, so it can only communicate via p2p-circuit
 	node, err := libp2p.New(
 		ctx,
 		libp2p.Identity(pvt),
@@ -68,21 +65,7 @@ func Listen(relayHost string) {
 	}
 
 	// Now, to test things, let's set up a protocol handler on node
-	node.SetStreamHandler("/cats", func(s network.Stream) {
-		fmt.Printf("Meow! It worked! remote are: %s\n", s.Conn().RemotePeer())
-		err = event.Write(event.Message{
-			Type: "message",
-			Data: nil,
-		})
-		s.Close()
-	})
-
-	fmt.Println("Device QmID: ", node.ID().Pretty());
-	// TODO SAVE QMID
-
-	for _, addr := range node.Addrs() {
-		fmt.Printf("Device Relay Addr: %s\n", addr.String())
-	}
+	node.SetStreamHandler("/secret", secretProtocol)
 
 	select {}
 }
