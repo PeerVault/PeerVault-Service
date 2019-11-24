@@ -6,6 +6,7 @@
 package database
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"go.etcd.io/bbolt"
@@ -20,7 +21,6 @@ const (
 func Open() (*bbolt.DB, error) {
 	// TODO manage path of the database
 	db, err := bbolt.Open(dbfile, 0600, &bbolt.Options{Timeout: 1 * time.Second})
-	fmt.Println("After init db")
 	if err != nil {
 		fmt.Println("DB Not accessible, must retry later")
 		return nil, err
@@ -33,4 +33,22 @@ func Itob(v int) []byte {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, uint64(v))
 	return b
+}
+
+func StructToBytes(v interface{}) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	err := binary.Write(buf, binary.BigEndian, v)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func BytesToStruct(data []byte, v interface{}) error {
+	buf := bytes.NewReader(data)
+	err := binary.Read(buf, binary.BigEndian, &v)
+	if err != nil {
+		panic(err)
+	}
+	return nil
 }

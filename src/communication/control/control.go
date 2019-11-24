@@ -7,12 +7,12 @@
 package control
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/Power-LAB/PeerVault/business/owner"
+	"github.com/Power-LAB/PeerVault/business/secret"
 )
 
 const (
@@ -20,12 +20,13 @@ const (
 )
 
 func Listen(address* string) {
-	fmt.Println("listen from control")
-
 	// GET / POST owner information
 	http.HandleFunc("/owner", owner.Controller)
 	// POST owner SEED information
 	http.HandleFunc("/owner/seed", owner.ControllerSeed)
+	// GET / POST secret information
+	http.HandleFunc("/secret", secret.Controller)
+	http.HandleFunc("/secret/", secret.Controller)
 
 	s := &http.Server{
 		Addr:           *address,
