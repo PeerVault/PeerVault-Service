@@ -8,98 +8,106 @@ package identity
 import (
 	b64 "encoding/base64"
 	"encoding/json"
-	"io/ioutil"
-	"os"
+	"github.com/Power-LAB/PeerVault/crypto"
+	"github.com/op/go-logging"
 
-	"github.com/libp2p/go-libp2p-core/crypto"
+	p2pCrypto "github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/peer"
 )
 
-type PeerIdentityJson struct {
-	Name    string
-	Id      string
-	PrivKey string
-	PubKey  string
+var (
+	log = logging.MustGetLogger("peerVaultLogger")
+)
+
+type PeerIdentity struct {
+	Name     string
+	Id       string
+	ChildKey string // Key represents a bip32 extended key 33bytes into string
+	PrivKey  string
+	PubKey   string
 }
 
-func CreateIdentity(name string, privKey crypto.PrivKey) PeerIdentityJson {
-	ID, err := peer.IDFromPrivateKey(privKey)
+func GetIdentity(QmPeerId string) (PeerIdentity, error) {
+	peerIdentity := &PeerIdentity{}
+	keychain := crypto.Keychain{}
+	err := keychain.CreateOrOpen()
 	if err != nil {
-		panic(err)
+		return *peerIdentity, err
 	}
-	_ = ID
 
-	pvtBytes, err := privKey.Raw()
+	idJson, err := keychain.Get(QmPeerId, "Owner")
 	if err != nil {
-		panic(err)
+		log.Debugf("The private key of QmPeerId %s has not been found on KeyChain", QmPeerId)
+		return *peerIdentity, err
 	}
-	_ = pvtBytes
-	pubBytes, err := privKey.GetPublic().Raw()
-	if err != nil {
-		panic(err)
-	}
-	_ = pubBytes
+	log.Debugf("%s", idJson)
 
-	return PeerIdentityJson{
-		Name: name,
-		Id: ID.Pretty(),
-		PrivKey: b64.StdEncoding.EncodeToString(pvtBytes),
-		PubKey: b64.StdEncoding.EncodeToString(pubBytes),
-	}
+	err = json.Unmarshal(idJson, peerIdentity)
+	return *peerIdentity, err
 }
 
-func (p PeerIdentityJson) GetCryptoPrivateKey() (crypto.PrivKey, error) {
+func (p *PeerIdentity) GetChildKeyAsByte() []byte {
+	childKey, _ := b64.StdEncoding.DecodeString(p.ChildKey)
+	return  childKey
+}
+
+
+func (p PeerIdentity) GetCryptoPrivateKey() (p2pCrypto.PrivKey, error) {
 	privKeyByte, err := b64.StdEncoding.DecodeString(p.PrivKey)
 	if err != nil {
 		return nil, err
 	}
-	pvtKey, err := crypto.UnmarshalSecp256k1PrivateKey(privKeyByte)
+	pvtKey, err := p2pCrypto.UnmarshalSecp256k1PrivateKey(privKeyByte)
 	if err != nil {
 		return nil, err
 	}
 	return pvtKey, nil
 }
 
-// Create json file with identity information
-func CreateIdentityJson(privKey crypto.PrivKey) string {
-	identityJson := CreateIdentity("PeerVault device identity", privKey)
-	idJson, err := json.MarshalIndent(identityJson, "", " ")
+func CreateIdentity(name string, privKey p2pCrypto.PrivKey, childKey []byte) (PeerIdentity, error) {
+	ID, err := peer.IDFromPrivateKey(privKey)
 	if err != nil {
-		panic(err)
+		return PeerIdentity{}, err
 	}
 
-	return string(idJson)
+	pvtBytes, err := privKey.Raw()
+	if err != nil {
+		return PeerIdentity{}, err
+	}
+
+	pubBytes, err := privKey.GetPublic().Raw()
+	if err != nil {
+		return PeerIdentity{}, err
+	}
+
+	return PeerIdentity{
+		Name: name,
+		Id: ID.Pretty(),
+		ChildKey: b64.StdEncoding.EncodeToString(childKey),
+		PrivKey: b64.StdEncoding.EncodeToString(pvtBytes),
+		PubKey: b64.StdEncoding.EncodeToString(pubBytes),
+	}, nil
 }
 
-func ReadIdentityJson(filePath string) (crypto.PrivKey, crypto.PubKey, error) {
-	// Open our jsonFile
-	jsonFile, err := os.Open(filePath)
-	// if we os.Open returns an error then handle it
+func (p PeerIdentity) SaveIdentity() error {
+	idJson, err := json.MarshalIndent(p, "", " ")
 	if err != nil {
-		return nil, nil, err
-	}
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
-
-	// read our opened xmlFile as a byte array.
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	// we initialize our Users array
-	var peerIdentity PeerIdentityJson
-
-	// we unmarshal our byteArray which contains our
-	// jsonFile's content into 'users' which we defined above
-	json.Unmarshal(byteValue, &peerIdentity)
-
-	privKeyByte, err := b64.StdEncoding.DecodeString(peerIdentity.PrivKey)
-	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
-	pvtKey, err := crypto.UnmarshalSecp256k1PrivateKey(privKeyByte)
+	keychain := crypto.Keychain{}
+	err = keychain.CreateOrOpen()
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
+	return keychain.Put(p.Id, idJson, "Owner", false)
+}
 
-	return pvtKey, pvtKey.GetPublic(), nil
+func DeleteIdentity(QmPeerId string) error {
+	keychain := crypto.Keychain{}
+	err := keychain.CreateOrOpen()
+	if err != nil {
+		return err
+	}
+	return keychain.Delete(QmPeerId)
 }

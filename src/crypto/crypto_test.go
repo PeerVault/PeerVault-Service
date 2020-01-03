@@ -74,3 +74,32 @@ func TestBipKeyToLibp2p(t *testing.T) {
 		t.Errorf("Node key convertion fail, %s", err.Error())
 	}
 }
+
+func TestEncryptAes(t *testing.T) {
+	seed := &Seed{}
+	seed.CreateSeed()
+	master, _ := seed.CreateMasterKey()
+	child, _ := CreateChildKey(master)
+
+	plainText := []byte("Foo Bar Baz")
+
+	out, err := EncryptAes(child.Key, plainText)
+	if err != nil {
+		t.Errorf("AES Encryption fail, %s", err.Error())
+	}
+
+	decryptedValue, err := DecryptAes(child.Key, out)
+	if err != nil {
+		t.Errorf("AES Decryption fail, %s", err.Error())
+	}
+
+	if string(plainText) != string(decryptedValue) {
+		t.Errorf(
+			"AES Decryption result are not similar. Expected %s, Actual %s",
+			plainText,
+			decryptedValue,
+		)
+	}
+
+	t.Logf("Decrypted output %s", decryptedValue)
+}

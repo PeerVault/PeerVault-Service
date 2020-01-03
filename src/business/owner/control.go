@@ -5,8 +5,13 @@ import (
 	"fmt"
 	"github.com/Power-LAB/PeerVault/crypto"
 	"github.com/Power-LAB/PeerVault/identity"
+	"github.com/op/go-logging"
 	"io/ioutil"
 	"net/http"
+)
+
+var (
+	log = logging.MustGetLogger("peerVaultLogger")
 )
 
 // Manage Owner GET / POST
@@ -43,7 +48,7 @@ func ControllerSeed(w http.ResponseWriter, r *http.Request) {
 func getOwner(w http.ResponseWriter, r *http.Request) {
 	exist, err := IsOwnerExist()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
@@ -57,15 +62,14 @@ func getOwner(w http.ResponseWriter, r *http.Request) {
 	o := &Owner{}
 	err = o.FetchOwner()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
-	o.Code = ""
 
 	buf, err := json.Marshal(o)
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
@@ -73,7 +77,7 @@ func getOwner(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(buf)
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
@@ -99,7 +103,7 @@ func createOwner(w http.ResponseWriter, r *http.Request) {
 
 	exist, err := IsOwnerExist()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
@@ -114,35 +118,47 @@ func createOwner(w http.ResponseWriter, r *http.Request) {
 	seed.CreateSeed()
 	master, err := seed.CreateMasterKey()
 	if err != nil {
-		fmt.Printf("Master key fail to create, %s", err.Error())
+		log.Debug("Master key fail to create")
+		log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	child, err := crypto.CreateChildKey(master)
 	if err != nil {
-		fmt.Printf("Child key fail to create, %s", err.Error())
+		log.Debug("Child key fail to create")
+		log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	pvtKey, err := crypto.BipKeyToLibp2p(child)
 	if err != nil {
-		fmt.Printf("BipKey to Libp2p convertion error, %s", err.Error())
+		log.Debug("BipKey to Libp2p convertion error")
+		log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	o.identity = identity.CreateIdentity(o.DeviceName, pvtKey)
+	peerIdentity, err := identity.CreateIdentity(o.DeviceName, pvtKey, child.Key)
+	if err != nil {
+		log.Debug("Error during identity creation")
+		log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	o.QmPeerId = peerIdentity.Id
 
 	// Save owner in DB
 	err = o.PutOwner()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Debug("PutOwner error")
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
 
-	err = o.SaveIdentity()
+	err = peerIdentity.SaveIdentity()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Debug("SaveIdentity error")
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
@@ -157,13 +173,10 @@ func updateOwner(w http.ResponseWriter, r *http.Request) {
 	o := &Owner{}
 	err := o.FetchOwner()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
-
-	resultJson, _ := json.Marshal(o.identity)
-	fmt.Println(string(resultJson))
 
 	// Verify and decode Owner input data
 	decoder := json.NewDecoder(r.Body)
@@ -178,7 +191,7 @@ func updateOwner(w http.ResponseWriter, r *http.Request) {
 	// Save owner in DB
 	err = o.PutOwner()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
@@ -190,7 +203,7 @@ func updateOwner(w http.ResponseWriter, r *http.Request) {
 func restoreOwner(w http.ResponseWriter, r *http.Request) {
 	exist, err := IsOwnerExist()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
@@ -234,35 +247,46 @@ func restoreOwner(w http.ResponseWriter, r *http.Request) {
 	seed.CreateSeed()
 	master, err := seed.CreateMasterKey()
 	if err != nil {
-		fmt.Printf("Master key fail to create, %s", err.Error())
+		log.Debug("Master key fail to create")
+		log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	child, err := crypto.CreateChildKey(master)
 	if err != nil {
-		fmt.Printf("Child key fail to create, %s", err.Error())
+		log.Debug("Child key fail to create")
+		log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	pvtKey, err := crypto.BipKeyToLibp2p(child)
 	if err != nil {
-		fmt.Printf("BipKey to Libp2p convertion error, %s", err.Error())
+		log.Debug("BipKey to Libp2p convertion error")
+		log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	o.identity = identity.CreateIdentity(o.DeviceName, pvtKey)
+	peerIdentity, err := identity.CreateIdentity(o.DeviceName, pvtKey, child.Key)
+	if err != nil {
+		log.Debug("Error during identity restore creation")
+		log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	o.QmPeerId = peerIdentity.Id
 
 	// Save owner in DB
 	err = o.PutOwner()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
 
-	err = o.SaveIdentity()
+	err = peerIdentity.SaveIdentity()
 	if err != nil {
-		fmt.Printf("INTERNAL ERROR: %s", err.Error())
+		log.Debug("Error during restore identity save")
+		log.Error(err)
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}

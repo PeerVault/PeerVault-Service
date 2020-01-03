@@ -7,16 +7,19 @@ package secret
 
 import (
 	"encoding/json"
-	"fmt"
-
-	//"github.com/Power-LAB/PeerVault/identity"
 	"github.com/Power-LAB/PeerVault/database"
+	"github.com/op/go-logging"
 	"go.etcd.io/bbolt"
+	"regexp"
 )
 
 const (
 	SecretTypePassword = iota // Secret ASCII Password
 	SecretTypeRsa = iota // Secret RSA key
+)
+
+var (
+	log = logging.MustGetLogger("peerVaultLogger")
 )
 
 type Secret struct {
@@ -26,6 +29,13 @@ type Secret struct {
 	Key string
 	Value string
 	Description string
+}
+
+func (secret *Secret) assertSecretStruct() bool {
+	reNs := regexp.MustCompile("^[0-9A-Za-z_.-]+$")
+	reKey := regexp.MustCompile("^[0-9A-Za-z_-]+$")
+
+	return reNs.MatchString(secret.Namespace) && reKey.MatchString(secret.Key) && secret.Type <= SecretTypeRsa
 }
 
 func FetchSecrets() ([]Secret, error) {
@@ -49,7 +59,8 @@ func FetchSecrets() ([]Secret, error) {
 			if err != nil {
 				return err
 			}
-			fmt.Println(secret.Key)
+			log.Debug(secret.Key)
+			log.Debug(secret.Value)
 			secret.Value = ""
 			secrets = append(secrets, secret)
 		}
@@ -63,6 +74,7 @@ func FetchSecrets() ([]Secret, error) {
 	return secrets, nil
 }
 
+// @deprecated
 func (secret *Secret) FetchSecret() error {
 	db, err := database.Open()
 	if err != nil {
@@ -104,10 +116,10 @@ func (secret *Secret) CreateSecret() error {
 		var b *bbolt.Bucket
 		b = tx.Bucket([]byte("secret"))
 		if b == nil {
-			fmt.Println("bucket secret is nil")
+			log.Debug("bucket secret is nil")
 			b2, err := tx.CreateBucket([]byte("secret"))
 			if err != nil {
-				fmt.Println("bucket secret create error nil")
+				log.Debug("bucket secret create error nil")
 				return err
 			}
 			b = b2
@@ -116,7 +128,8 @@ func (secret *Secret) CreateSecret() error {
 	})
 }
 
-func DeleteSecret(key string) error {
+// keyPath are the fullpath of the key, namespace concat with key, spaced by dot
+func DeleteSecret(keyPath string) error {
 	db, err := database.Open()
 	if err != nil {
 		return err
@@ -129,7 +142,10 @@ func DeleteSecret(key string) error {
 		if b == nil {
 			return nil
 		}
-		_ = b.Delete([]byte(key))
+		log.Debugf("Delete the key path: %s", keyPath)
+		if err := b.Delete([]byte(keyPath)); err != nil {
+			return err
+		}
 		return nil
 	})
 }

@@ -8,20 +8,22 @@ package event
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/op/go-logging"
+)
+
+var (
+	log = logging.MustGetLogger("peerVaultLogger")
+	upgrader = websocket.Upgrader{} // use default options
+	connections = make([]websocket.Conn,0)
 )
 
 type Message struct {
 	Type string `json:"type"`
 	Data interface{} `json:"data"`
 }
-
-var upgrader = websocket.Upgrader{} // use default options
-var connections = make([]websocket.Conn,0)
 
 // Write response to all websocket client connected
 func Write(message Message) error {
@@ -31,7 +33,7 @@ func Write(message Message) error {
 	}
 	for _, conn := range connections {
 		if err := conn.WriteJSON(string(msgJson)); err != nil {
-			log.Println(err)
+			log.Error(err)
 			return err
 		}
 	}
@@ -42,7 +44,7 @@ func Write(message Message) error {
 func process(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 		return
 	}
 	connections = append(connections, *conn)
@@ -53,19 +55,18 @@ func process(w http.ResponseWriter, r *http.Request) {
 	}
 	resultJson, err := json.MarshalIndent(result, "", " ")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if err := conn.WriteJSON(string(resultJson)); err != nil {
-		log.Println(err)
+		log.Error(err)
 		return
 	}
 
 }
 
 func Listen(address* string) {
-	fmt.Println("listen from event")
-	log.SetFlags(0)
+	log.Info("listen from event")
 	http.HandleFunc("/process", process)
 	log.Fatal(http.ListenAndServe(*address, nil))
 }

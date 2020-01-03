@@ -7,19 +7,26 @@
 package control
 
 import (
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/Power-LAB/PeerVault/business/exposure"
 	"github.com/Power-LAB/PeerVault/business/owner"
 	"github.com/Power-LAB/PeerVault/business/secret"
+	"github.com/op/go-logging"
 )
 
 const (
 	timeout = 10 * time.Second
 )
 
+var (
+	log = logging.MustGetLogger("peerVaultLogger")
+)
+
 func Listen(address* string) {
+	log.Info("listen from control")
+
 	// GET / POST owner information
 	http.HandleFunc("/owner", owner.Controller)
 	// POST owner SEED information
@@ -27,6 +34,8 @@ func Listen(address* string) {
 	// GET / POST secret information
 	http.HandleFunc("/secret", secret.Controller)
 	http.HandleFunc("/secret/", secret.Controller)
+
+	http.HandleFunc("/expose/", exposure.Controller)
 
 	s := &http.Server{
 		Addr:           *address,

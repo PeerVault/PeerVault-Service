@@ -17,7 +17,7 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
-func Listen(relayHost string) {
+func Listen(relayHost *string) {
 	exist, err := owner.IsOwnerExist()
 	if err != nil {
 		fmt.Printf("PEER INTERNAL ERROR: %s", err.Error())
@@ -38,7 +38,11 @@ func Listen(relayHost string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	pvt, err := o.GetIdentity().GetCryptoPrivateKey()
+	peerIdentity, err := o.GetIdentity()
+	if err != nil {
+		panic(err)
+	}
+	pvt, err := peerIdentity.GetCryptoPrivateKey()
 	if err != nil {
 		panic(err)
 	}
@@ -55,7 +59,7 @@ func Listen(relayHost string) {
 	}
 
 	// Creates relay peer.AddrInfo
-	relayAddrInfo, err := p2pAddrInfo(relayHost)
+	relayAddrInfo, err := p2pAddrInfo(*relayHost)
 	if err != nil {
 		panic(err)
 	}

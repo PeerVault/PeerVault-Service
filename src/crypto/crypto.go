@@ -11,19 +11,26 @@ package crypto
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/base64"
 	"errors"
 	"io"
-	"log"
 
 	crand "crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
-	rand "math/rand"
+	"math/rand"
 
 	"github.com/libp2p/go-libp2p-core/crypto"
+	"github.com/op/go-logging"
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/crypto/ripemd160"
+)
+
+var (
+	log = logging.MustGetLogger("peerVaultLogger")
 )
 
 //
@@ -104,6 +111,64 @@ func IsChildFromMaster(child *bip32.Key, master *bip32.Key) bool {
 // Node key also known as Device Key will be used to identify a specific peer
 func BipKeyToLibp2p(child *bip32.Key) (crypto.PrivKey, error) {
 	return crypto.UnmarshalSecp256k1PrivateKey(child.Key)
+}
+
+// Symmetric encryption using Child key from bip32.Key
+// The output are base64 encoded
+func EncryptAes(key []byte, in []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		log.Debugf("NewCipher(%d bytes)", len(key))
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		log.Debug("GCM Galois/Counter mode fail", err)
+		return nil, err
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(crand.Reader, nonce); err != nil {
+		log.Debug("Nonce random fail", err)
+		return nil, err
+	}
+	cipherText := gcm.Seal(nonce, nonce, in, nil)
+	return []byte(base64.StdEncoding.EncodeToString(cipherText)), nil
+}
+
+// Symmetric decryption using Child key from bip32.Key
+// The input must be base64 encoded, returned by function EncryptAes
+func DecryptAes(key []byte, in []byte) ([]byte, error) {
+	cipherText, err := base64.StdEncoding.DecodeString(string(in))
+	if err != nil {
+		return nil, err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		log.Error("NewCipher(%d bytes) = %s", len(key), err)
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		log.Debug("GCM Galois/Counter mode fail", err)
+		return nil, err
+	}
+
+	nonceSize := gcm.NonceSize()
+	if len(cipherText) < nonceSize {
+		return nil, errors.New("Ciphertext block size is too short!")
+	}
+
+	nonce, cipherText := cipherText[:nonceSize], cipherText[nonceSize:]
+	plainText, err := gcm.Open(nil, nonce, cipherText, nil)
+	if err != nil {
+		log.Debug("Fail to decrypt", err)
+		return nil, err
+	}
+	return plainText, nil
 }
 
 //

@@ -10,17 +10,27 @@ import (
 	"encoding/binary"
 	"fmt"
 	"go.etcd.io/bbolt"
+	"os"
+	"path/filepath"
 	"time"
 )
 
-const (
-	dbfile = "peervault.db"
+var (
+	dbFilePath string
 )
+
+func SetDbPath(path string) {
+	dbFilePath = path
+}
+
+func GetDbPath() string {
+	return dbFilePath
+}
 
 // Open PeerVault database
 func Open() (*bbolt.DB, error) {
-	// TODO manage path of the database
-	db, err := bbolt.Open(dbfile, 0600, &bbolt.Options{Timeout: 1 * time.Second})
+	_ = os.MkdirAll(filepath.Dir(dbFilePath), 0700)
+	db, err := bbolt.Open(dbFilePath, 0600, &bbolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		fmt.Println("DB Not accessible, must retry later")
 		return nil, err

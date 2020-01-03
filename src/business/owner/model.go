@@ -3,6 +3,7 @@ package owner
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Power-LAB/PeerVault/crypto"
 	"github.com/Power-LAB/PeerVault/database"
 	"github.com/Power-LAB/PeerVault/identity"
 	"go.etcd.io/bbolt"
@@ -16,13 +17,12 @@ const (
 )
 
 type Owner struct {
-	// Private
-	identity identity.PeerIdentityJson
 	// Public
+	QmPeerId string
 	Nickname string
 	DeviceName string
-	Code string 		//`json:"-"`    WE CANT USE IT, BECAUSE WE ALSO CONVERT IN JSON ON BBOLT
-	AskPassword int // PasswordPolicyNone | PasswordPolicyAlwaysRequired | PasswordPolicyOnlyWhenExposure
+	UnlockCode string   //`json:"-"`    WE CANT USE IT, BECAUSE WE ALSO CONVERT IN JSON ON BBOLT
+	AskPassword int     // PasswordPolicyNone | PasswordPolicyAlwaysRequired | PasswordPolicyOnlyWhenExposure
 }
 
 func IsOwnerExist() (bool, error) {
@@ -48,8 +48,8 @@ func IsOwnerExist() (bool, error) {
 	return exist, err
 }
 
-func (o *Owner) GetIdentity() identity.PeerIdentityJson {
-	return o.identity
+func (o *Owner) GetIdentity() (identity.PeerIdentity, error) {
+	return identity.GetIdentity(o.QmPeerId)
 }
 
 func (o *Owner) FetchOwner() error {
@@ -66,15 +66,6 @@ func (o *Owner) FetchOwner() error {
 		if err != nil {
 			return err
 		}
-
-		ownerIdentity := identity.PeerIdentityJson{}
-		ownerIdentityJson := b.Get([]byte("identity"))
-		err2 := json.Unmarshal(ownerIdentityJson, &ownerIdentity)
-		if err2 != nil {
-			return err2
-		}
-		o.identity = ownerIdentity
-
 		return nil
 	})
 	if err != nil {
@@ -90,6 +81,16 @@ func (o *Owner) PutOwner() error {
 		return err
 	}
 	defer db.Close()
+
+	keychain := crypto.Keychain{}
+	err = keychain.CreateOrOpen()
+	if err != nil {
+		return err
+	}
+	log.Debug("update UnlockCode", o.UnlockCode)
+	err = keychain.Put("UnlockCode", []byte(o.UnlockCode), "OwnerCode", true)
+	// erase code because we only want it into keychain, not bbolt
+	o.UnlockCode = ""
 
 	// Marshal Owner into bytes.
 	buf, err := json.Marshal(&o)
@@ -110,35 +111,6 @@ func (o *Owner) PutOwner() error {
 			b = b2
 		}
 		return b.Put([]byte("buf"), buf)
-	})
-}
-
-func (o *Owner) SaveIdentity() error {
-	db, err := database.Open()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	// Marshal Owner Identity into bytes.
-	buf, err := json.Marshal(&o.identity)
-	if err != nil {
-		return err
-	}
-
-	return db.Update(func(tx *bbolt.Tx) error {
-		var b *bbolt.Bucket
-		b = tx.Bucket([]byte("owner"))
-		if b == nil {
-			fmt.Println("Bucket owner is nil")
-			b2, err := tx.CreateBucket([]byte("owner"))
-			if err != nil {
-				fmt.Println("Bucket Creation error")
-				return err
-			}
-			b = b2
-		}
-		return b.Put([]byte("identity"), buf)
 	})
 }
 
@@ -167,5 +139,18 @@ func PasswordVerification(r *http.Request, exposure bool) bool {
 		return true
 	}
 
-	return o.Code == r.Header.Get("X-OWNER-CODE")
+	keychain := crypto.Keychain{}
+	err = keychain.CreateOrOpen()
+	if err != nil {
+		log.Error(err)
+		return false
+	}
+	code, err := keychain.Get("UnlockCode", "OwnerCode")
+	if err != nil {
+		log.Error(err)
+		return false
+	}
+	log.Debugf("assert code %s = %s", code, r.Header.Get("X-OWNER-CODE"))
+
+	return string(code) == r.Header.Get("X-OWNER-CODE")
 }
