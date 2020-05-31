@@ -36,6 +36,8 @@ func Listen(address* string) {
 	http.HandleFunc("/secret/", secret.Controller)
 
 	http.HandleFunc("/expose/", exposure.Controller)
+	http.HandleFunc("/expose/request", exposure.ControllerRequest)
+	http.HandleFunc("/expose/request/", exposure.ControllerRequest)
 
 	s := &http.Server{
 		Addr:           *address,

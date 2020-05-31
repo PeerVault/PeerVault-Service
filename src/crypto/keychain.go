@@ -1,3 +1,5 @@
+// +build darwin
+
 // Copyright (c) 2019, Pierre Tomasina
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -8,7 +10,6 @@ package crypto
 
 import (
 	"errors"
-	"fmt"
 	"github.com/keybase/go-keychain"
 )
 
@@ -16,27 +17,13 @@ const (
 	service = "PeerVault"
 )
 
-type Error int
-
 var (
 	path = "peervault.keychain"
-	ErrorKeychainValueAlreadyExists = Error(1)
-	ErrorKeychainKeyNotFound = Error(2)
 )
 
 func EnableDevMode() {
 	log.Debug("Developer mode enabled using keychain 'peervault-dev'")
 	path = "peervault-dev.keychain"
-}
-
-func (k Error) Error() (msg string) {
-	switch k {
-	case ErrorKeychainValueAlreadyExists:
-		msg = "Value already exist on PeerVault keychain."
-	case ErrorKeychainKeyNotFound:
-		msg = "Key not found in PeerVault keychain"
-	}
-	return fmt.Sprintf("%s (%d)", msg, k)
 }
 
 type Keychain struct {

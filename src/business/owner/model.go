@@ -2,7 +2,6 @@ package owner
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Power-LAB/PeerVault/crypto"
 	"github.com/Power-LAB/PeerVault/database"
 	"github.com/Power-LAB/PeerVault/identity"
@@ -26,11 +25,10 @@ type Owner struct {
 }
 
 func IsOwnerExist() (bool, error) {
-	db, err := database.Open()
+	db, err := database.GetConnection()
 	if err != nil {
 		return false, err
 	}
-	defer db.Close()
 
 	exist := false
 	err = db.View(func(tx *bbolt.Tx) error {
@@ -53,11 +51,10 @@ func (o *Owner) GetIdentity() (identity.PeerIdentity, error) {
 }
 
 func (o *Owner) FetchOwner() error {
-	db, err := database.Open()
+	db, err := database.GetConnection()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	err = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("owner"))
@@ -76,11 +73,10 @@ func (o *Owner) FetchOwner() error {
 }
 
 func (o *Owner) PutOwner() error {
-	db, err := database.Open()
+	db, err := database.GetConnection()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	keychain := crypto.Keychain{}
 	err = keychain.CreateOrOpen()
@@ -98,14 +94,17 @@ func (o *Owner) PutOwner() error {
 		return err
 	}
 
+	code, _ := keychain.Get("UnlockCode", "OwnerCode")
+	log.Debugf("assert code %s", code)
+
 	return db.Update(func(tx *bbolt.Tx) error {
 		var b *bbolt.Bucket
 		b = tx.Bucket([]byte("owner"))
 		if b == nil {
-			fmt.Println("Bucket owner is nil")
+			log.Debug("Bucket owner is nil")
 			b2, err := tx.CreateBucket([]byte("owner"))
 			if err != nil {
-				fmt.Println("Bucket Creation error")
+				log.Debug("Bucket Creation error")
 				return err
 			}
 			b = b2
@@ -129,13 +128,13 @@ func PasswordVerification(r *http.Request, exposure bool) bool {
 
 	// Always authorized when password is disabled
 	if o.AskPassword == PasswordPolicyNone {
-		fmt.Println("PasswordVerification PasswordPolicyNone")
+		log.Debug("PasswordVerification PasswordPolicyNone")
 		return true
 	}
 
-	// Authorized when we are not expose secret and password policy is exposure only
+	// Authorized when we are not exposing secret and password policy is exposure only
 	if !exposure && o.AskPassword == PasswordPolicyOnlyWhenExposure {
-		fmt.Println("PasswordVerification PasswordPolicyOnlyWhenExposure")
+		log.Debug("PasswordVerification PasswordPolicyOnlyWhenExposure")
 		return true
 	}
 

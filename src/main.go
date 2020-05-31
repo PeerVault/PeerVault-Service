@@ -56,6 +56,9 @@ func main() {
 	}
 
 	database.SetDbPath(*dbFilePath)
+	if err := database.Open(); err != nil {
+		log.Fatal("Error during opening bbolt database")
+	}
 
 	run(wsAddress, apiAddress, relayHost)
 }
@@ -93,7 +96,7 @@ func configureLogger(logFilePath string, logLevel int) {
 		fmt.Printf(
 			"\033[%dm%s\033[0m",
 			int(logging.ColorRed),
-			"!!! ATTENTION !!!\nDEBUG LOGGING MAY CONTAIN SENSIBLE INFORMATION SUCH AS CLEAR PRIVATE " +
+			"!!! ATTENTION !!!\nDEBUG LOGGING MAY CONTAIN SENSIBLE INFORMATION SUCH AS CLEAR PRIVATE "+
 				"KEY OR ANY DATA.\nIT SHOULD ONLY BE USED IN DEVELOPPER MODE\n\n")
 	}
 	logging.SetBackend(backendLogLeveled)
@@ -107,7 +110,8 @@ func run(wsAddress *string, apiAddress *string, relayHost *string) {
 	go control.Listen(apiAddress)
 
 	// Start peer
-	go peer.Listen(relayHost)
+	peer.SetRelayHost(*relayHost)
+	go peer.Listen()
 
 	select {}
 }

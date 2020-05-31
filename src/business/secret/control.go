@@ -19,14 +19,14 @@ func Controller(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch r.Method {
-		case http.MethodGet:
-			getSecrets(w, r)
-		case http.MethodPost:
-			createSecret(w, r)
-		case http.MethodDelete:
-			deleteSecret(w, r)
-		default:
-			http.Error(w, "Invalid request method.", 405)
+	case http.MethodGet:
+		getSecrets(w, r)
+	case http.MethodPost:
+		createSecret(w, r)
+	case http.MethodDelete:
+		deleteSecret(w, r)
+	default:
+		http.Error(w, "Invalid request method.", 405)
 	}
 }
 
@@ -67,8 +67,8 @@ func createSecret(w http.ResponseWriter, r *http.Request) {
 	}
 	o := owner.Owner{}
 	if o.FetchOwner() != nil {
-		log.Error(err)
-		http.Error(w, "{\"error\": \"Owner not found\"}", http.StatusBadRequest)
+		log.Notice(err)
+		http.Error(w, "{\"error\": \"Owner not found\"}", http.StatusNotFound)
 	}
 
 	// Encrypt the secret before saving into bbolt
@@ -76,7 +76,7 @@ func createSecret(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Debug("Cannot find Identity of current owner")
 		log.Error(err)
-		http.Error(w, "{\"error\": \"Owner not found\"}", http.StatusInternalServerError)
+		http.Error(w, "{\"error\": \"Cannot find Identity of current owner\"}", http.StatusInternalServerError)
 	}
 	cipherSecretValue, err := crypto.EncryptAes(identity.GetChildKeyAsByte(), []byte(secret.Value))
 	if err != nil {

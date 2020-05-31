@@ -8,7 +8,7 @@ package database
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
+	"github.com/op/go-logging"
 	"go.etcd.io/bbolt"
 	"os"
 	"path/filepath"
@@ -17,6 +17,8 @@ import (
 
 var (
 	dbFilePath string
+	dbConnectionRw *bbolt.DB
+	log = logging.MustGetLogger("peerVaultLogger")
 )
 
 func SetDbPath(path string) {
@@ -28,14 +30,28 @@ func GetDbPath() string {
 }
 
 // Open PeerVault database
-func Open() (*bbolt.DB, error) {
+func Open() error {
+	var err error
 	_ = os.MkdirAll(filepath.Dir(dbFilePath), 0700)
-	db, err := bbolt.Open(dbFilePath, 0600, &bbolt.Options{Timeout: 1 * time.Second})
+	dbConnectionRw, err = bbolt.Open(dbFilePath, 0600, &bbolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		fmt.Println("DB Not accessible, must retry later")
-		return nil, err
+		log.Error("DB Not accessible, must retry later")
+		return err
 	}
-	return db, nil
+	return nil
+}
+
+func Close() {
+	_ = dbConnectionRw.Close()
+}
+
+func GetConnection() (*bbolt.DB, error) {
+	if dbConnectionRw == nil {
+		if err := Open(); err != nil {
+			return nil, err
+		}
+	}
+	return dbConnectionRw, nil
 }
 
 // Convert integer into byte

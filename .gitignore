@@ -27,4 +27,5 @@
 .idea
 bin
 peervault.db
+.peervault-linux.db
 .DS_Store

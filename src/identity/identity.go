@@ -40,7 +40,6 @@ func GetIdentity(QmPeerId string) (PeerIdentity, error) {
 		log.Debugf("The private key of QmPeerId %s has not been found on KeyChain", QmPeerId)
 		return *peerIdentity, err
 	}
-	log.Debugf("%s", idJson)
 
 	err = json.Unmarshal(idJson, peerIdentity)
 	return *peerIdentity, err

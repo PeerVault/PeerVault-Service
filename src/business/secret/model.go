@@ -7,20 +7,34 @@ package secret
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Power-LAB/PeerVault/database"
 	"github.com/op/go-logging"
 	"go.etcd.io/bbolt"
 	"regexp"
 )
 
+type Error int
+
+func (k Error) Error() (msg string) {
+	switch k {
+	case ErrorSecretNotFound:
+		msg = "The Secret key path, namespace and key name was not found"
+	}
+	return fmt.Sprintf("%s (%d)", msg, k)
+}
+
 const (
 	SecretTypePassword = iota // Secret ASCII Password
 	SecretTypeRsa = iota // Secret RSA key
+
+	ErrorSecretNotFound = Error(1)
 )
 
 var (
 	log = logging.MustGetLogger("peerVaultLogger")
 )
+
 
 type Secret struct {
 	// Public
@@ -39,11 +53,10 @@ func (secret *Secret) assertSecretStruct() bool {
 }
 
 func FetchSecrets() ([]Secret, error) {
-	db, err := database.Open()
+	db, err := database.GetConnection()
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 	var secrets []Secret
 
 	err = db.View(func(tx *bbolt.Tx) error {
@@ -74,37 +87,36 @@ func FetchSecrets() ([]Secret, error) {
 	return secrets, nil
 }
 
-// @deprecated
-func (secret *Secret) FetchSecret() error {
-	db, err := database.Open()
+func FetchSecret(keyPath []byte) (Secret, error) {
+	secret := &Secret{}
+	db, err := database.GetConnection()
 	if err != nil {
-		return err
+		return *secret, err
 	}
-	defer db.Close()
 
 	err = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("secret"))
-		buf := b.Get([]byte("buf"))
-		err := json.Unmarshal(buf, secret)
-		if err != nil {
-			return err
+		if b == nil {
+			return ErrorSecretNotFound
 		}
-
-		return nil
+		buf := b.Get(keyPath)
+		if buf == nil {
+			return ErrorSecretNotFound
+		}
+		return json.Unmarshal(buf, secret)
 	})
 	if err != nil {
-		return err
+		return *secret, err
 	}
 
-	return nil
+	return *secret, nil
 }
 
 func (secret *Secret) CreateSecret() error {
-	db, err := database.Open()
+	db, err := database.GetConnection()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	// Secret serialized to json.
 	buf, err := json.Marshal(&secret)
@@ -130,11 +142,10 @@ func (secret *Secret) CreateSecret() error {
 
 // keyPath are the fullpath of the key, namespace concat with key, spaced by dot
 func DeleteSecret(keyPath string) error {
-	db, err := database.Open()
+	db, err := database.GetConnection()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	return db.Update(func(tx *bbolt.Tx) error {
 		var b *bbolt.Bucket

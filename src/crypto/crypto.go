@@ -15,6 +15,7 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 
 	crand "crypto/rand"
@@ -29,9 +30,23 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
+type Error int
+
 var (
 	log = logging.MustGetLogger("peerVaultLogger")
+	ErrorKeychainValueAlreadyExists = Error(1)
+	ErrorKeychainKeyNotFound = Error(2)
 )
+
+func (k Error) Error() (msg string) {
+	switch k {
+	case ErrorKeychainValueAlreadyExists:
+		msg = "Value already exist on PeerVault keychain."
+	case ErrorKeychainKeyNotFound:
+		msg = "Key not found in PeerVault keychain"
+	}
+	return fmt.Sprintf("%s (%d)", msg, k)
+}
 
 //
 // Seed Integration

@@ -22,7 +22,7 @@ var (
 
 type Message struct {
 	Type string `json:"type"`
-	Data interface{} `json:"data"`
+	Data map[string]string `json:"data"`
 }
 
 // Write response to all websocket client connected
@@ -67,6 +67,7 @@ func process(w http.ResponseWriter, r *http.Request) {
 
 func Listen(address* string) {
 	log.Info("listen from event")
-	http.HandleFunc("/process", process)
-	log.Fatal(http.ListenAndServe(*address, nil))
+	http.HandleFunc("/events", process)
+	_ = http.ListenAndServe(*address, nil)
+	select {}
 }
