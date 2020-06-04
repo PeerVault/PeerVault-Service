@@ -1,7 +1,7 @@
 // +build linux
 
-// Copyright (c) 2019, Pierre Tomasina
-// Use of this source code is governed by a BSD-style
+// Copyright (c) 2020, Pierre Tomasina
+// Use of this source code is governed by a GNU AGPLv3
 // license that can be found in the LICENSE file.
 //
 // Crypto package will manage the cryptography of the Vault

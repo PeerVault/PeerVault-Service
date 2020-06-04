@@ -1,3 +1,7 @@
+// Copyright (c) 2020, Pierre Tomasina
+// Use of this source code is governed by a GNU AGPLv3
+// license that can be found in the LICENSE file.
+//
 package main
 
 import (
