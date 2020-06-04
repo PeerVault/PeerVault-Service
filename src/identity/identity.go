@@ -8,7 +8,7 @@ package identity
 import (
 	b64 "encoding/base64"
 	"encoding/json"
-	"github.com/Power-LAB/PeerVault/crypto"
+	"github.com/PeerVault/PeerVault-Service/crypto"
 	"github.com/op/go-logging"
 
 	p2pCrypto "github.com/libp2p/go-libp2p-core/crypto"

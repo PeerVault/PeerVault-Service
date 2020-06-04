@@ -1,15 +1,15 @@
+// Package owner will manage owner information
+//
 // Copyright (c) 2020, Pierre Tomasina
 // Use of this source code is governed by a GNU AGPLv3
 // license that can be found in the LICENSE file.
-//
-// Owner package will manage owner information
 package owner
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Power-LAB/PeerVault/crypto"
-	"github.com/Power-LAB/PeerVault/identity"
+	"github.com/PeerVault/PeerVault-Service/crypto"
+	"github.com/PeerVault/PeerVault-Service/identity"
 	"github.com/op/go-logging"
 	"io/ioutil"
 	"net/http"

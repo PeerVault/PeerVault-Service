@@ -1,4 +1,4 @@
-module github.com/Power-LAB/PeerVault
+module github.com/PeerVault/PeerVault-Service
 
 go 1.12
 

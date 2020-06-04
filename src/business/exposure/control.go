@@ -1,17 +1,17 @@
+// Package exposure will manage the secret exposure to the client
+//
 // Copyright (c) 2020, Pierre Tomasina
 // Use of this source code is governed by a GNU AGPLv3
 // license that can be found in the LICENSE file.
-//
-// Exposure package will manage the secret exposure to the client
 package exposure
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Power-LAB/PeerVault/business/owner"
-	"github.com/Power-LAB/PeerVault/business/secret"
-	"github.com/Power-LAB/PeerVault/communication/peer"
-	"github.com/Power-LAB/PeerVault/crypto"
+	"github.com/PeerVault/PeerVault-Service/business/owner"
+	"github.com/PeerVault/PeerVault-Service/business/secret"
+	"github.com/PeerVault/PeerVault-Service/communication/peer"
+	"github.com/PeerVault/PeerVault-Service/crypto"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
 	"net/http"
@@ -23,7 +23,7 @@ var (
 	log = logging.MustGetLogger("peerVaultLogger")
 )
 
-// Manage Secret GET / POST
+// Controller Manage Secret GET / POST
 func Controller(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if !owner.PasswordVerification(r, true) {
@@ -39,7 +39,7 @@ func Controller(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Manage Exposure Request
+// ControllerRequest Manage Exposure Request
 // POST : Create a request for sharing secret with other peer
 // GET : List requests, both sent and received
 // DELETE : Decline or remove request
@@ -93,9 +93,9 @@ func getSecretValue(w http.ResponseWriter, r *http.Request) {
 	}
 	s.Value = string(plainText)
 
-	resultJson, _ := json.Marshal(s)
+	resultJSON, _ := json.Marshal(s)
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(resultJson)
+	_, _ = w.Write(resultJSON)
 }
 
 func createShareRequest(w http.ResponseWriter, r *http.Request) {
@@ -142,18 +142,18 @@ func createShareRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
-	resultJson, _ := json.Marshal(share)
+	resultJSON, _ := json.Marshal(share)
 
 	go func() {
 		// Dial to receiver
-		err := peer.Dial(shareRequest.Receiver, peer.PidShareRequest, resultJson)
+		err := peer.Dial(shareRequest.Receiver, peer.PidShareRequest, resultJSON)
 		if err != nil {
 			log.Error("Error during share request dial")
 		}
 	}()
 
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(resultJson)
+	_, _ = w.Write(resultJSON)
 }
 
 // Retrieved share request
@@ -164,9 +164,9 @@ func getShareRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "{\"error\": \"internal server error\"}", http.StatusInternalServerError)
 		return
 	}
-	resultJson, _ := json.Marshal(shares)
+	resultJSON, _ := json.Marshal(shares)
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(resultJson)
+	_, _ = w.Write(resultJSON)
 }
 
 func deleteShareRequest(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +193,7 @@ func shareResponse(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("{\"error\": \"Payload must be struct of ShareRequest\"}"))
 		return
 	}
-	shareResponseJson, _ := json.Marshal(shareResponse)
+	shareResponseJSON, _ := json.Marshal(shareResponse)
 
 	go func() {
 		// Approve the request locally to trust data when secret will arrive
@@ -201,7 +201,7 @@ func shareResponse(w http.ResponseWriter, r *http.Request) {
 			peer.ApproveLocalRequest(shareResponse.Uuid)
 		}
 		// Dial to sender to confirm share
-		err := peer.Dial(shareResponse.Sender, peer.PidShareResponse, shareResponseJson)
+		err := peer.Dial(shareResponse.Sender, peer.PidShareResponse, shareResponseJSON)
 		if err != nil {
 			log.Error("Error during share response dial")
 		}

@@ -10,7 +10,7 @@ package crypto
 
 import (
 	"fmt"
-	"github.com/Power-LAB/PeerVault/database"
+	"github.com/PeerVault/PeerVault-Service/database"
 	"github.com/op/go-logging"
 	"go.etcd.io/bbolt"
 )

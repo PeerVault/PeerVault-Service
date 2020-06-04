@@ -1,14 +1,14 @@
+// Package secret will manage secrets
+//
 // Copyright (c) 2020, Pierre Tomasina
 // Use of this source code is governed by a GNU AGPLv3
 // license that can be found in the LICENSE file.
-//
-// Secret package will manage secrets
 package secret
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Power-LAB/PeerVault/database"
+	"github.com/PeerVault/PeerVault-Service/database"
 	"github.com/op/go-logging"
 	"go.etcd.io/bbolt"
 	"regexp"

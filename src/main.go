@@ -7,33 +7,21 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Power-LAB/PeerVault/communication/control"
-	"github.com/Power-LAB/PeerVault/communication/event"
-	"github.com/Power-LAB/PeerVault/communication/peer"
-	"github.com/Power-LAB/PeerVault/crypto"
-	"github.com/Power-LAB/PeerVault/database"
+	"github.com/PeerVault/PeerVault-Service/communication/control"
+	"github.com/PeerVault/PeerVault-Service/communication/event"
+	"github.com/PeerVault/PeerVault-Service/communication/peer"
+	"github.com/PeerVault/PeerVault-Service/crypto"
+	"github.com/PeerVault/PeerVault-Service/database"
 	"github.com/op/go-logging"
 	"os"
 )
 
 var (
 	log = logging.MustGetLogger("peerVaultLogger")
+	format = logging.MustStringFormatter(
+		"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}",
+	)
 )
-
-// Example format string. Everything except the message has a custom color
-// which is dependent on the log level. Many fields have a custom output
-// formatting too, eg. the time returns the hour down to the milli second.
-var format = logging.MustStringFormatter(
-	"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}",
-)
-
-// Password is just an example type implementing the Redactor interface. Any
-// time this is logged, the Redacted() function will be called.
-type Password string
-
-func (p Password) Redacted() interface{} {
-	return logging.Redact(string(p))
-}
 
 func main() {
 	debugMode := flag.Bool("dev", false, "Enable dev mode")

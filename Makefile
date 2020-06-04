@@ -38,4 +38,4 @@ run: build
 	./bin/peervault -dev --log 9 --relay "$(DEFAULT_RELAY)" --bbolt /Users/pierozi/.peervault/bbolt-dev.db
 
 test:
-	cd src && go test -v -coverprofile=/tmp/profile.out github.com/Power-LAB/PeerVault/crypto
+	cd src && go test -v -coverprofile=/tmp/profile.out github.com/PeerVault/PeerVault-Service/crypto

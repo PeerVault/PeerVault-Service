@@ -2,17 +2,15 @@
 // Use of this source code is governed by a GNU AGPLv3
 // license that can be found in the LICENSE file.
 //
-// Control package will manage all the communication with
-// the local client of desktop, CLI or Graphic
+// Package control will manage all the communication with the client (GUI / CLI)
 package control
 
 import (
 	"net/http"
 	"time"
-
-	"github.com/Power-LAB/PeerVault/business/exposure"
-	"github.com/Power-LAB/PeerVault/business/owner"
-	"github.com/Power-LAB/PeerVault/business/secret"
+	"github.com/PeerVault/PeerVault-Service/business/exposure"
+	"github.com/PeerVault/PeerVault-Service/business/owner"
+	"github.com/PeerVault/PeerVault-Service/business/secret"
 	"github.com/op/go-logging"
 )
 

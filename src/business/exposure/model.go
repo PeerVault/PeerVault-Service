@@ -1,17 +1,18 @@
+// Package exposure will manage the secret exposure to the client
+//
 // Copyright (c) 2020, Pierre Tomasina
 // Use of this source code is governed by a GNU AGPLv3
 // license that can be found in the LICENSE file.
-//
-// Exposure package will manage the secret exposure to the client
 package exposure
 
 import (
 	"encoding/json"
-	"github.com/Power-LAB/PeerVault/database"
+	"github.com/PeerVault/PeerVault-Service/database"
 	"go.etcd.io/bbolt"
 	"time"
 )
 
+// Share structure for sharing exchange
 type Share struct {
 	Uuid string
 	Sender string
