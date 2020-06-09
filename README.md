@@ -8,6 +8,8 @@ Leverage from blockchain technology innovation such as libp2p and bip39 Mnemonic
 
 # PeerVault Service (Daemon)
 
+:warning: if you are interested about using the program, you should head to the [CLIENT APP](https://github.com/PeerVault/PeerVault-GUI-Flutter) that already includes the service in the same bundle.
+
 ## QuickStart
 
 Download the binary either for Linux or OSX depending of your platform on the github release page
