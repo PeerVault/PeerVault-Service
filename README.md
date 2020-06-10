@@ -60,6 +60,12 @@ IT SHOULD ONLY BE USED IN DEVELOPPER MODE
 19:01:05.822 Listen ▶ INFO 009 [/ip4/127.0.0.1/tcp/50451 /ip4/127.94.0.1/tcp/50451 /ip4/192.168.127.155/tcp/50451 /ip6/::1/tcp/50452]
 ```
 
+### Functional
+
+If you wish to test all the functionaly without the GUI
+You can use POSTMAN to request the service.
+Import the collection using `api-postman-collection.json`
+
 ## Roadmap
 
 ### MVP - Phase 2 (Q2 2020)

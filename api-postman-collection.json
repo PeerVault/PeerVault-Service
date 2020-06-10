@@ -1,0 +1,436 @@
+{
+	"info": {
+		"_postman_id": "0093074a-bc41-4604-b4f2-5a1414abcd38",
+		"name": "PeerVault",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "FetchOwner",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-OWNER-CODE",
+						"value": "012345",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{host}}/owner",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"owner"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Owner",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"Nickname\": \"Jane Doe\",\n    \"UnlockCode\": \"012345\",\n    \"AskPassword\": 1,\n    \"DeviceName\": \"Home Desktop\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}/owner",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"owner"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Owner",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "X-OWNER-CODE",
+						"type": "text",
+						"value": "012345"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"Nickname\": \"Jane\",\n    \"UnlockCode\": \"012345\",\n    \"AskPassword\": 2,\n    \"DeviceName\": \"mbp\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}/owner",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"owner"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Restore Owner from SEED",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"Nickname\": \"Jane\",\n    \"UnlockCode\": \"012345\",\n    \"AskPassword\": 1,\n    \"DeviceName\": \"mbp\",\n    \"Mnemonic\": \"pair violin lab acoustic submit chalk runway infant news rabbit paddle abandon flower garment reopen rabbit muffin poet pistol wealth report shift key funny\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}/owner/seed",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"owner",
+						"seed"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Account",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{host}}/owner",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"owner"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Account Confirmation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{host}}/owner/delete",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"owner",
+						"delete"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Secret",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "X-OWNER-CODE",
+						"value": "012345",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"Namespace\": \"my-company.iam\",\n    \"Type\": 0,\n    \"Key\": \"jane\",\n    \"Value\": \"FooBarBaz123456\",\n    \"Description\": \"IAM Jane Password\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}/secret",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"secret"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch Secret",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-OWNER-CODE",
+						"value": "012345",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{host}}/secret",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"secret"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Secret",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "X-OWNER-CODE",
+						"type": "text",
+						"value": "012345"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{host}}/secret/my-company.iam.jane",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"secret",
+						"my-company.iam.jane"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Expose secret",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "X-OWNER-CODE",
+						"type": "text",
+						"value": "012345"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{host}}/expose/my-company.iam.jane",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"expose",
+						"my-company.iam.jane"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Share Request - New",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "X-OWNER-CODE",
+						"type": "text",
+						"value": "012345"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"KeyPath\": \"my-company.iam.jane\",\n\t\"ExpirationDelay\": 2,\n\t\"Receiver\": \"16Uiu2HAmAMWYzzpuMV5NBJ32UbgehBzerCrKfu5Dx7q4XB99SeRb\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}/expose/request",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"expose",
+						"request"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Share Request List",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "X-OWNER-CODE",
+						"type": "text",
+						"value": "012345"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{host}}/expose/request",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"expose",
+						"request"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Share Request - Delete",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "X-OWNER-CODE",
+						"type": "text",
+						"value": "012345"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{host}}/expose/request/37bd9119-4b70-4596-bbf4-e1644a980e60",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"expose",
+						"request",
+						"37bd9119-4b70-4596-bbf4-e1644a980e60"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Share Request - Confirmation",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "X-OWNER-CODE",
+						"type": "text",
+						"value": "012345"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"Uuid\": \"030de125-9d28-44e2-beea-764ddcf6bb45\",\n\t\"Sender\": \"16Uiu2HAmBT7VSELym2h5w3Gu5oFqyv7FV3s5fQ1w5KJr6PX1TYrN\",\n\t\"Approved\": true\n}"
+				},
+				"url": {
+					"raw": "{{host}}/expose/request",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"expose",
+						"request"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
