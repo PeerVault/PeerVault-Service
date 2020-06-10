@@ -15,7 +15,7 @@ Leverage from blockchain technology innovation such as libp2p and bip39 Mnemonic
 Download the binary either for Linux or OSX depending of your platform on the github release page
 
 - [Download for OSX](https://github.com/PeerVault/PeerVault-Service/releases/download/v0.1.0/peervault-darwin)
-- [Download for Linux](https://github.com/PeerVault/PeerVault-Service/releases/download/v0.1.0/peervault-darwin)
+- [Download for Linux](https://github.com/PeerVault/PeerVault-Service/releases/download/v0.1.0/peervault-linux)
 
 ### Usage
 
